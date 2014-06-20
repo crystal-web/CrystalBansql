@@ -22,7 +22,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-public class Core extends JavaPlugin implements Listener {
+public class Core extends JavaPlugin {
 	public String prefix = ChatColor.GRAY + "[" + ChatColor.GREEN + "Bansql" + ChatColor.GRAY + "] " + ChatColor.RESET;
 	public String url;
 	public String dbname;
@@ -42,7 +42,7 @@ public class Core extends JavaPlugin implements Listener {
 		//getCommand("ban").setExecutor(new Ban(this));
 		//getCommand("pardon").setExecutor(new Pardon(this));
 		this.getLogger().info("Initialisation des events...");
-		this.getServer().getPluginManager().registerEvents(this, this);
+		this.getServer().getPluginManager().registerEvents(new EventListener(this), this);
 		
 		// Thread 
 		this.getLogger().info("Initialisation du thread...");

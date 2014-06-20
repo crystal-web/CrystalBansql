@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.Date; 
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -31,14 +31,12 @@ public class Core extends JavaPlugin {
 
 	Connection connection;
 	Statement state;
-	
 
 	public void onEnable() {
 		this.getLogger().info("Chargement de la configuration...");
 		Config conf = new Config(this);
 		conf.prepare();
 
-		
 		//getCommand("ban").setExecutor(new Ban(this));
 		//getCommand("pardon").setExecutor(new Pardon(this));
 		this.getLogger().info("Initialisation des events...");
@@ -104,7 +102,7 @@ public class Core extends JavaPlugin {
 			for (Player player : Bukkit.getOnlinePlayers()) {
 				try {
 
-					String query = "SELECT * FROM `" + this.dbname + "`.`bansql` WHERE `uid` LIKE '"
+					String query = "SELECT reason FROM `" + this.dbname + "`.`bansql` WHERE `uid` LIKE '"
 							+ player.getUniqueId().toString()
 							+ "' OR `ip` LIKE '"
 							+ player.getAddress().getAddress().getHostAddress().toString() + "'";

@@ -1,5 +1,13 @@
 package me.devphp.CrystalBansql;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,8 +33,93 @@ public class EventListener implements Listener {
 		Player sender = event.getPlayer();
 		String message = event.getMessage();
 		String[] args = message.split(" ");
+		
+		if (args[0].equalsIgnoreCase("/exportban")) {
+			try {
+				this.plugin.connection = DriverManager.getConnection(this.plugin.url, this.plugin.user, this.plugin.passwd);
+				this.plugin.state = this.plugin.connection.createStatement();
+				
+				String query = "SELECT uid, ip, pseudo, admin, reason, bantime, banto FROM `" + this.plugin.dbname + "`.`bansql` LIMIT 1000";
+//				this.getLogger().severe(query);
+				ResultSet result = this.plugin.state.executeQuery(query);
+				
+				//création ou ajout dans le fichier texte
+				try {
+					String fichier = this.plugin.getDataFolder() + File.separator + "ban.txt";
+					FileWriter fw = new FileWriter (fichier);
+					BufferedWriter bw = new BufferedWriter (fw);
+					PrintWriter fichierSortie = new PrintWriter (bw); 
+					
+					int exporte = 0;
+					while (result.next()) {
+						exporte++;
+						fichierSortie.println (result.getString("uid") + ";" + result.getString("ip") + ";" + result.getString("pseudo") + ";" + result.getString("admin") + ";" + result.getString("reason") + ";" + result.getString("bantime") + ";" + result.getString("banto"));	
+					}
+					fichierSortie.close();
+					sender.sendMessage(this.plugin.prefix + "Le fichier a été créé et " + exporte + " ont été enregistré!"); 
+				}
+				catch (Exception e){
+					System.out.println(e.toString());
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				this.plugin.getLogger().severe(e.getMessage());
+			}
+			
 
-		if (args[0].equalsIgnoreCase("/tempban")) {
+		}else if (args[0].equalsIgnoreCase("/importban")) {
+			
+			try {
+				this.plugin.connection = DriverManager.getConnection(this.plugin.url, this.plugin.user, this.plugin.passwd);
+				this.plugin.state = this.plugin.connection.createStatement();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				this.plugin.getLogger().severe(e.getMessage());
+			}
+			
+			
+			int entree = 0;
+			int enregistrement = 0;
+			String chaine="";
+			String fichier = this.plugin.getDataFolder() + File.separator + "ban.txt";
+			//lecture du fichier texte	
+			try{
+				InputStream ips=new FileInputStream(fichier); 
+				InputStreamReader ipsr=new InputStreamReader(ips);
+				BufferedReader br=new BufferedReader(ipsr);
+				String ligne;
+				while ((ligne=br.readLine())!=null){
+					entree++;
+					String[] data = ligne.split(";");
+					String uid = data[0];
+					String ip = data[1];
+					String pseudo = data[2];
+					String admin = data[3];
+					String reason = data[4];
+					String bantime = data[5];
+					String banto = data[6];
+					
+					// Recherche dans la DB si il existe
+					String query = "SELECT reason FROM `" + this.plugin.dbname + "`.`bansql` WHERE `uid` LIKE '"
+							+ uid
+							+ "' OR `ip` LIKE '"
+							+ ip
+							+ "'";
+//					this.getLogger().severe(query);
+					ResultSet result = this.plugin.state.executeQuery(query);
+					if (result.getRow() == 0) {
+						enregistrement++;
+						this.plugin.state.execute("INSERT INTO `" + this.plugin.dbname + "`.`bansql` (`id`, `uid`, `ip`, `pseudo`, `admin`, `reason`, `bantime`, `banto`) VALUES (NULL, '" + uid + "', '" + ip + "', '" + pseudo + "', '" + admin + "', '" + reason + "', '" + bantime + "', '" + banto + "');");
+					}//*/
+				}
+				br.close();
+				
+				sender.sendMessage(this.plugin.prefix + " Importation effectué " + entree + " dans le fichier et " + enregistrement + " enregistré en base de donnée");
+			}		
+			catch (Exception e){
+				System.out.println(e.toString());
+			}
+		} else if (args[0].equalsIgnoreCase("/tempban")) {
 			if (!sender.isOp() && !sender.hasPermission("bansql.ban")) {
 				sender.sendMessage(this.plugin.prefix + ChatColor.RED + "Permission refusé");
 				return;
@@ -152,25 +245,17 @@ public class EventListener implements Listener {
 			this.plugin.connection = DriverManager.getConnection(this.plugin.url, this.plugin.user, this.plugin.passwd);
 			this.plugin.state = this.plugin.connection.createStatement();
 			
-			String query = "SELECT * FROM `bansql` WHERE `uid` LIKE '"
+			String query = "SELECT reason FROM `bansql` WHERE `uid` LIKE '"
 					+ player.getUniqueId().toString()
 					+ "' OR `ip` LIKE '"
 					+ player.getAddress().getAddress().getHostAddress()
 							.toString() + "'";
 			ResultSet result = this.plugin.state.executeQuery(query);			
-				
-			Thread.sleep(100L);
+			
+			// Petit delay pour le kick
+			Thread.sleep(50L);
 				while(result.next()) {
 					player.kickPlayer(result.getString("reason"));
-					
-					/*if (result.getInt("time") > 0) {
-						Timestamp stamp = new Timestamp(System.currentTimeMillis());
-						if (result.getInt("time") < stamp.getTime()) {
-							return;
-						}
-					}//*/
-					
-				
 				return;
 				}
 			
@@ -197,12 +282,10 @@ public class EventListener implements Listener {
 			this.plugin.getLogger().info(this.plugin.prefix + ChatColor.RED + "Connection success");
 			
 			
-			String query = "SELECT * FROM `bansql` WHERE `pseudo` LIKE '"
+			String query = "SELECT id FROM `bansql` WHERE `pseudo` LIKE '"
 					+ playerToUnban + "'";//*/
 			ResultSet result = this.plugin.state.executeQuery(query);
 			try {
-
-				
 				while(result.next()) {
 					if (this.plugin.state.isClosed()) {
 						this.plugin.state = this.plugin.connection.createStatement();

@@ -1,0 +1,11 @@
+name: CrystalBansql
+main: me.devphp.CrystalBansql.Core
+authors: [Devphp]
+version: 1.0
+commands:
+  ban:
+    description: Bannir un joueur
+  tempban:
+    description: Bannir temporairement
+  pardon:
+    description: Pardonner un jouer

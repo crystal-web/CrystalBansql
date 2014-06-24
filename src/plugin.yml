@@ -9,3 +9,7 @@ commands:
     description: Bannir temporairement
   pardon:
     description: Pardonner un jouer
+  importban:
+    description: Importante les données précédement exporter
+  exportban:
+    description: Exporte les donnée vers le fichier texte ban.txt
